@@ -14,15 +14,89 @@ stage.add(layer);
 const MAX_POINTS = 10;
 let polyline // La polyline en cours de construction;
 
-const polylineMachine = createMachine(
-    {
-        /** @xstate-layout N4IgpgJg5mDOIC5gF8A0IB2B7CdGgAcsAbATwBkBLDMfEI2SgF0qwzoA9EBaANnVI9eAOgAM4iZMkB2ZGnokK1MMMoRitJAsYs2nRABYATAMQAOAIzCD0gJwXetgwGZezgw9ty5QA */
+const polylineMachine = createMachine({
+        context: {},
         id: "polyLine",
         initial: "idle",
-        states : {
+        states: {
             idle: {
-            }
-        }
+                on: {
+                    MOUSECLICK: {
+                        target: "FirstPoint",
+                        actions: {
+                            type: "CreateLine",
+                        },
+                    },
+                },
+            },
+            FirstPoint: {
+                on: {
+                    MOUSECLICK: {
+                        target: "OtherPoints",
+                        actions: {
+                            type: "addPoint",
+                        },
+                    },
+                    MOUSEMOVE: {
+                        target: "FirstPoint",
+                        actions: {
+                            type: "setLastPoint",
+                        },
+                    },
+                    ESCAPE: {
+                        target: "idle",
+                        actions: {
+                            type: "abandon",
+                        },
+                    },
+                },
+            },
+            OtherPoints: {
+                on: {
+                    MOUSEMOVE: {
+                        target: "OtherPoints",
+                        actions: {
+                            type: "setLastPoint",
+                        },
+                    },
+                    MOUSECLICK: {
+                        target: "OtherPoints",
+                        actions: {
+                            type: "addPoint",
+                        },
+                    },
+                    ESCAPE: {
+                        target: "idle",
+                        actions: {
+                            type: "abandon",
+                        },
+                    },
+                    BACKSPACE: [
+                        {
+                            target: "OtherPoints",
+                            actions: {
+                                type: "removeLastPoint",
+                            },
+                            guard: {
+                                type: "New guard",
+                            },
+                        },
+                        {
+                            target: "FirstPoint",
+                            actions: {
+                                type: "removeLastPoint",
+                            },
+                        },
+                    ],
+                    ENTER: {
+                        target: "idle",
+                        actions: {
+                            type: "saveLine",
+                        },
+                    },
+                },
+            },
+        },
     },
     // Quelques actions et guardes que vous pouvez utiliser dans votre machine
     {
@@ -67,7 +141,7 @@ const polylineMachine = createMachine(
             // Abandonner le tracé de la polyline
             abandon: (context, event) => {
                 // Supprimer la variable polyline :
-                
+
             },
             // Supprimer le dernier point de la polyline
             removeLastPoint: (context, event) => {
@@ -84,7 +158,7 @@ const polylineMachine = createMachine(
             pasPlein: (context, event) => {
                 // Retourner vrai si la polyline a moins de 10 points
                 // attention : dans le tableau de points, chaque point est représenté par 2 valeurs (coordonnées x et y)
-                
+
             },
             // On peut enlever un point
             plusDeDeuxPoints: (context, event) => {
